@@ -1,8 +1,15 @@
 from imports import *
 from data_load import load_fc_matrices, plot_fc_matrix, load_network_table
 
-network_table = load_network_table("C:\\Mats og Odd Arne\\Prosjektoppgave\\Schaefer2018_400Parcels_7Networks_order.lut")
-network_labels = network_table["Network"].values
+WFH = True
+
+def get_network_table():
+    if WFH:
+        network_table = load_network_table(r"C:\Users\matse\OneDrive - NTNU\Documents\Kyb\2025 Høst\Prosjektoppgave\Schaefer2018_400Parcels_7Networks_order.lut")
+    else:
+        network_table = load_network_table("C:\\Mats og Odd Arne\\Prosjektoppgave\\Schaefer2018_400Parcels_7Networks_order.lut")
+    
+    return network_table
 
 
 def extract_subject_connectivity_features(fc_matrix: np.array, network_table: pd.Dataframe):
@@ -30,6 +37,6 @@ def extract_subject_connectivity_features(fc_matrix: np.array, network_table: pd
 def create_feature_dataframe():
     fc_matrices = load_fc_matrices()
 
-    all_features = [extract_subject_connectivity_features(fc_matrix, network_table) for fc_matrix in fc_matrices]
+    all_features = [extract_subject_connectivity_features(fc_matrix, get_network_table()) for fc_matrix in fc_matrices]
     features_df = pd.DataFrame(all_features)
     return features_df
