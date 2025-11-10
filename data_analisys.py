@@ -1,36 +1,36 @@
 from imports import *
 from data_load import load_fc_matrices, plot_fc_matrix, load_network_table
 
-network_table = load_network_table("C:\\Mats og Odd Arne\\Prosjektoppgave\\Schaefer2018_400Parcels_7Networks_order.lut")
-network_labels = network_table["Network"].values
 
-
-def extract_subject_connectivity_features(fc_matrix: np.array, network_table: pd.Dataframe):
-    
-    networks = network_table["Network"].values
-    unique_networks = np.unique(networks)
-
-    features = {}
-    for net_i in unique_networks:
-        
-        idx_i = np.where(networks == net_i)[0]
-        
-        for net_j in unique_networks:
             
-            idx_j = np.where(networks == net_j)[0]
-            sub_matrix = fc_matrix[np.ix_(idx_i, idx_j)]
-           
-            mean_conn = np.mean(sub_matrix)
-            feature_name = f"{net_i}_{net_j}_mean_conn"
-            features[feature_name] = mean_conn
+def perform_z_normalization(features_df: pd.DataFrame):
+    z_normalized_df = features_df.apply(zscore)
+    return z_normalized_df
 
+def perform_PCA(features_df: pd.DataFrame, n_components=10):
     
-    return features
+    pca = PCA(n_components=n_components)
+    principal_components = pca.fit_transform(features_df)
 
-def create_feature_dataframe():
-    fc_matrices = load_fc_matrices()
+    pc_df = pd.DataFrame(data=principal_components,
+                         columns=[f'PC{i+1}' for i in range(n_components)])
+    
+    explained = pca.explained_variance_ratio_
+    print("Explained variance per PC:", explained)
+    print("Cumulative explained variance:", explained.cumsum())
+    return pc_df
 
-    all_features = [extract_subject_connectivity_features(fc_matrix, network_table) for fc_matrix in fc_matrices]
-    features_df = pd.DataFrame(all_features)
-    return features_df
-            
+def perform_ward_hierarchical_linkage(features_df: pd.DataFrame):
+
+
+    linked = linkage(features_df, method='ward')
+
+    plt.figure(figsize=(10, 7))
+    dendrogram(linked,
+               orientation='top',
+               distance_sort='descending',
+               show_leaf_counts=True)
+    plt.title('Ward Hierarchical Clustering Dendrogram')
+    plt.xlabel('Sample index')
+    plt.ylabel('Distance')
+    plt.show()

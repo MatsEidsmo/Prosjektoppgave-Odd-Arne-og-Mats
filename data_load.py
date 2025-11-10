@@ -6,7 +6,7 @@ def load_fc_matrices():
     ## Load data from matlab files
     subjects = []
     for i in range(N_FC_Matrices_m2):
-        filepath = f"C:\\Mats og Odd Arne\\Prosjektoppgave\\sch407\\YA\\zFCmat\\sub-11{i:03d}_task-video_run-2__zFCmat.mat"
+        filepath = f"C:\\Mats og Odd Arne\\Prosjektoppgave\\sch407\\YA\\zFCmat\\sub-11{i:03d}_task-video_run-2 __zFCmat.mat"
 
         try:
             fc_mat_m2 = loadmat(filepath)
