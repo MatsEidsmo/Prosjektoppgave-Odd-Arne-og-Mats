@@ -22,11 +22,11 @@ def perform_PCA(features_df: pd.DataFrame, n_components=10):
 
 def perform_ward_hierarchical_linkage(features_df: pd.DataFrame):
 
+    return linkage(features_df, method='ward')
 
-    linked = linkage(features_df, method='ward')
-
+def plot_dendogram(Z: np.array):
     plt.figure(figsize=(10, 7))
-    dendrogram(linked,
+    dendrogram(Z,
                orientation='top',
                distance_sort='descending',
                show_leaf_counts=True)
