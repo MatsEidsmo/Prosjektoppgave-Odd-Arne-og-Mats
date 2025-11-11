@@ -40,3 +40,61 @@ def create_feature_dataframe():
     all_features = [extract_subject_connectivity_features(fc_matrix, get_network_table()) for fc_matrix in fc_matrices]
     features_df = pd.DataFrame(all_features)
     return features_df
+
+
+
+
+def generate_synthetic_feature_dataframe(n_subjects=10, n_rois=200, n_networks=7, random_state=None):
+    """
+    Generate a small synthetic feature DataFrame for testing the pipeline.
+
+    Parameters
+    ----------
+    n_subjects : int
+        Number of synthetic subjects to simulate.
+    n_rois : int
+        Number of ROIs (e.g., 200 for quick testing).
+    n_networks : int
+        Number of functional networks (e.g., 7 for Yeo-7).
+    random_state : int, optional
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    features_df : pd.DataFrame
+        Synthetic subjects × features table.
+    """
+
+    from data_load import generate_random_fc_matrix  # assuming your generator is in data_load
+
+
+    rng = np.random.default_rng(random_state)
+
+    # --- 1. Create a mock LUT dataframe ---
+    network_labels = np.repeat(np.arange(n_networks), n_rois // n_networks)
+    remainder = n_rois - len(network_labels)
+    if remainder > 0:
+        network_labels = np.concatenate([network_labels, rng.integers(0, n_networks, remainder)])
+
+    network_names = np.array(["Vis", "SomMot", "DorsAttn", "SalVentAttn", "Limbic", "Cont", "Default"])
+    net_map = {i: network_names[i % len(network_names)] for i in range(n_networks)}
+
+    lut_df = pd.DataFrame({
+        "Index": np.arange(n_rois),
+        "Network": [net_map[i] for i in network_labels],
+        "Hemisphere": rng.choice(["LH", "RH"], size=n_rois)
+    })
+
+    # --- 2. Simulate FC matrices and extract features ---
+    all_features = []
+    for subj in range(n_subjects):
+        fc = generate_random_fc_matrix(n_rois=n_rois, n_networks=n_networks, random_state=subj)
+        feats = extract_subject_connectivity_features(fc, lut_df)
+        feats["subject"] = subj + 1
+        all_features.append(feats)
+
+    # --- 3. Combine into one DataFrame ---
+    features_df = pd.DataFrame(all_features).set_index("subject")
+
+    print(f"✅ Generated synthetic feature dataframe: {features_df.shape[0]} subjects × {features_df.shape[1]} features")
+    return features_df

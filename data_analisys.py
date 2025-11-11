@@ -1,4 +1,5 @@
 from imports import *
+import matplotlib.pyplot as plt
 from data_load import load_fc_matrices, plot_fc_matrix, load_network_table
 
 
@@ -34,3 +35,20 @@ def plot_dendogram(Z: np.array):
     plt.xlabel('Sample index')
     plt.ylabel('Distance')
     plt.show()
+
+def find_clusters(norm_data: np.array, linkage_matrix: np.array = None):
+    scores = {}
+    for k in range(2, 12):
+        cluster_labels = fcluster(linkage_matrix, k, criterion='maxclust')
+        score = silhouette_score(norm_data, cluster_labels)
+        scores[k] = score
+        print(f"For n_clusters = {k}, the average silhouette_score is : {score}")
+    
+    best_score_k = max(scores, key=scores.get)
+    print(f"Best number of clusters by silhouette score: {best_score_k} with score {scores[best_score_k]}")
+
+    plt.figure()
+    plt.plot(list(scores.keys()), list(scores.values()), marker='o')
+    plt.show()
+
+
