@@ -1,22 +1,35 @@
-from imports import *
+from my_imports import *
+import matplotlib.pyplot as plt
+
+SubcorticalROI = False
 
 
 
 def load_fc_matrices():
-    N_FC_Matrices_m2 = 216
+    N_FC_Matrices_m2 = 400
     ## Load data from matlab files
     subjects = []
     for i in range(N_FC_Matrices_m2):
-        filepath = f"C:\\Mats og Odd Arne\\Prosjektoppgave\\sch407\\YA\\zFCmat\\sub-11{i:03d}_task-video_run-2 __zFCmat.mat"
 
-        try:
-            fc_mat_m2 = loadmat(filepath)
-            
-            fc_array = np.array(fc_mat_m2['zfcmatrix'])
-        except Exception as e:
-            continue
+        filepath1 = rf"C:\Users\matsei\Documents\Mats og Odd Arne\Prosjektoppgave\sch407\YA\zFCmat\sub-11{i+1:03d}_task-video_run-2__zFCmat.mat"
+        filepath2 = rf"C:\Users\matsei\Documents\Mats og Odd Arne\Prosjektoppgave\sch407\OA\zFCmat\sub-12{i+1:03d}_task-video_run-2__zFCmat.mat"
+
+        for filepath in [filepath1, filepath2]:
+
+            try:
+                fc_mat_m2 = loadmat(filepath)
+                fc_array = np.array(fc_mat_m2['zfcmatrix'])
+                np.fill_diagonal(fc_array, 1.0)  # Ensure diagonal is 1
+                
+                if not SubcorticalROI:
+                    fc_array = fc_array[:400, :400]
+                
+                subjects.append(fc_array)
+
+            except Exception as e:
+                #print(f"Error loading {filepath}: {e}")
+                continue
         
-        subjects.append(fc_array)
         # Process fc_matrix as needed
     print(f"Loaded {len(subjects)} FC matrices.")
 
@@ -25,9 +38,7 @@ def load_fc_matrices():
     return subjects
 
 def plot_fc_matrix(fc_matrix):
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
+    #fc_matrix = np.nan_to_num(fc_matrix, nan=0.0, posinf=1.0, neginf=0.0)
     plt.figure(figsize=(10, 8))
     sns.heatmap(fc_matrix, cmap='RdBu_r', center=0, square=True, cbar_kws={'label': 'Correlation'})
     plt.title('Functional Connectivity Matrix')

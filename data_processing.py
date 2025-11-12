@@ -1,19 +1,21 @@
-from imports import *
+from my_imports import *
 from data_load import load_fc_matrices, plot_fc_matrix, load_network_table
 
-WFH = True
+WFH = False
+
 
 def get_network_table():
     if WFH:
         network_table = load_network_table(r"C:\Users\matse\OneDrive - NTNU\Documents\Kyb\2025 Høst\Prosjektoppgave\Schaefer2018_400Parcels_7Networks_order.lut")
     else:
-        network_table = load_network_table("C:\\Mats og Odd Arne\\Prosjektoppgave\\Schaefer2018_400Parcels_7Networks_order.lut")
+        network_table = load_network_table(r"C:\Users\matsei\Documents\Mats og Odd Arne\Prosjektoppgave-Odd-Arne-og-Mats\Schaefer2018_400Parcels_7Networks_order.lut")
     
     return network_table
-
-
-def extract_subject_connectivity_features(fc_matrix: np.array, network_table: pd.Dataframe):
     
+
+
+def extract_subject_connectivity_features(fc_matrix: np.array, network_table: pd.DataFrame, group: int = "all"):
+    print(f"Extracting features for group: {group}")
     networks = network_table["Network"].values
     unique_networks = np.unique(networks)
 
@@ -30,14 +32,23 @@ def extract_subject_connectivity_features(fc_matrix: np.array, network_table: pd
             mean_conn = np.mean(sub_matrix)
             feature_name = f"{net_i}_{net_j}_mean_conn"
             features[feature_name] = mean_conn
-
-    
+    features["group"] = group
+    print(f"group: {group}")
     return features
 
 def create_feature_dataframe():
     fc_matrices = load_fc_matrices()
+    all_features = []
+    group_threshold = 72  # Define threshold for group separation
+    for i, fc_matrix in enumerate(fc_matrices):
+        # Determine the group based on the index
+        if i < group_threshold:
+            group = 0  # e.g., Young Adults
+        else:
+            group = 1  # e.g., Older Adults
+        features = extract_subject_connectivity_features(fc_matrix, get_network_table(), group)
+        all_features.append(features)
 
-    all_features = [extract_subject_connectivity_features(fc_matrix, get_network_table()) for fc_matrix in fc_matrices]
     features_df = pd.DataFrame(all_features)
     return features_df
 
