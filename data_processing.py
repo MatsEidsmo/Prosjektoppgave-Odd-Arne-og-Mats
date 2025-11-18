@@ -15,7 +15,7 @@ def get_network_table():
 
 
 def extract_subject_connectivity_features(fc_matrix: np.array, network_table: pd.DataFrame, group: int = "all"):
-    print(f"Extracting features for group: {group}")
+    #print(f"Extracting features for group: {group}")
     networks = network_table["Network"].values
     unique_networks = np.unique(networks)
 
@@ -33,7 +33,7 @@ def extract_subject_connectivity_features(fc_matrix: np.array, network_table: pd
             feature_name = f"{net_i}_{net_j}_mean_conn"
             features[feature_name] = mean_conn
     features["group"] = group
-    print(f"group: {group}")
+    #print(f"group: {group}")
     return features
 
 def create_feature_dataframe():

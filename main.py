@@ -17,16 +17,19 @@ def main():
     #dl.plot_fc_matrix(fc_matrices[0])
     
     
-    z_scores = da.perform_z_normalization(subject_features, group = 0)
+    z_scores = da.perform_z_normalization(subject_features)
     print(f"Z-scores:\n{z_scores}")
     pc_df = da.perform_PCA(z_scores, n_components=20)
-    linkage_matrix = da.perform_ward_hierarchical_linkage(pc_df)
+    da.plot_PCA(pc_df)
+    
+    
+    linkage_matrix = da.perform_ward_hierarchical_linkage(z_scores)
 
     
     #da.plot_dendogram(linkage_matrix)
     da.find_clusters(z_scores.values, linkage_matrix)
     #print("Extracted Features:\n", subject_features)
-
+    da.plot_clustered_heatmap(z_scores, linkage_matrix)
     ###PLOTTING A SINGLE fc matrix
 
 main()

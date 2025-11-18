@@ -31,9 +31,9 @@ def load_fc_matrices():
                 continue
         
         # Process fc_matrix as needed
-    print(f"Loaded {len(subjects)} FC matrices.")
+    #print(f"Loaded {len(subjects)} FC matrices.")
 
-    print(f"Matrix shape:\n {subjects[0].shape}")
+    #print(f"Matrix shape:\n {subjects[0].shape}")
 
     return subjects
 
