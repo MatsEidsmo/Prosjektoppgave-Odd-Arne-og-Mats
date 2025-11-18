@@ -74,3 +74,23 @@ def plot_PCA(features_df: pd.DataFrame):
     plt.ylabel("PCA2")
     plt.title("PCA Projection of fMRI Connectivity Features")
     plt.show()
+
+def PCA_loadings(z_scored_features: pd.DataFrame, n_components=10):
+    pca = PCA(n_components=n_components)
+    pca.fit(z_scored_features)
+    loadings = pca.components_.T * np.sqrt(pca.explained_variance_)
+    loading_df = pd.DataFrame(loadings, index=z_scored_features.columns, columns=[f'PC{i+1}' for i in range(n_components)])
+    return loading_df, pca.explained_variance_ratio_
+
+def plot_loadings(loading_df: pd.DataFrame, pcs: list = ["PC1", "PC2"], top_n: int = 10):
+    network_pairs = [feat.split("_mean_conn")[0] for feat in loading_df.index]
+    loading_df["network_pair"] = network_pairs
+    agg_df = loading_df.groupby("network_pair")[pcs].mean()
+
+    plt.figure(figsize=(10, len(agg_df) * 0.4))
+    sns.heatmap(agg_df, annot=True, cmap="coolwarm", center=0, fmt=".2f")
+    plt.title("PCA Loadings by Network Pair")
+    plt.xlabel("Principal Component")
+    plt.ylabel("Network Pair")
+    plt.tight_layout()
+    plt.show()
