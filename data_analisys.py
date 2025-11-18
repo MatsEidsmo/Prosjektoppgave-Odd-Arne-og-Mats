@@ -1,24 +1,29 @@
-from imports import *
+from my_imports import *
+import matplotlib.pyplot as plt
 from data_load import load_fc_matrices, plot_fc_matrix, load_network_table
 
 
             
-def perform_z_normalization(features_df: pd.DataFrame):
+def perform_z_normalization(features_df: pd.DataFrame, group: int = "all"):
     z_normalized_df = features_df.apply(zscore)
+    if group != "all":
+        z_normalized_df = features_df[features_df['group'] == group]
     return z_normalized_df
 
-def perform_PCA(features_df: pd.DataFrame, n_components=10):
+def perform_PCA(features_df: pd.DataFrame, n_components=10, group: int = "all"):
+    if group != "all":
+        features_df = features_df[features_df['group'] == group]
     
     pca = PCA(n_components=n_components)
     principal_components = pca.fit_transform(features_df)
 
-    pc_df = pd.DataFrame(data=principal_components,
+    features_df = pd.DataFrame(data=principal_components,
                          columns=[f'PC{i+1}' for i in range(n_components)])
     
     explained = pca.explained_variance_ratio_
     print("Explained variance per PC:", explained)
     print("Cumulative explained variance:", explained.cumsum())
-    return pc_df
+    return features_df
 
 def perform_ward_hierarchical_linkage(features_df: pd.DataFrame):
 
@@ -33,4 +38,39 @@ def plot_dendogram(Z: np.array):
     plt.title('Ward Hierarchical Clustering Dendrogram')
     plt.xlabel('Sample index')
     plt.ylabel('Distance')
+    plt.show()
+
+def find_clusters(features_df: pd.DataFrame, linkage_matrix: np.array = None, group: str = "any"):
+    if group != "any":
+        features_df = features_df[features_df['group'] == group]
+
+
+    scores = {}
+    for k in range(2, 12):
+        cluster_labels = fcluster(linkage_matrix, k, criterion='maxclust')
+        score = silhouette_score(features_df, cluster_labels)
+        scores[k] = score
+        print(f"For n_clusters = {k}, the average silhouette_score is : {score}")
+    
+    best_score_k = max(scores, key=scores.get)
+    print(f"Best number of clusters by silhouette score: {best_score_k} with score {scores[best_score_k]}")
+
+    plt.figure()
+    plt.plot(list(scores.keys()), list(scores.values()), marker='o')
+    plt.show()
+
+def plot_clustered_heatmap(features_df: pd.DataFrame, linkage_matrix: np.array):
+    sns.clustermap(features_df, row_linkage=linkage_matrix, col_cluster=False, cmap='vlag', standard_scale=1)
+    plt.title('Clustered Heatmap')
+    plt.show()
+
+
+def plot_PCA(features_df: pd.DataFrame):
+    clustering = AgglomerativeClustering(n_clusters=2, linkage="ward")
+    labels = clustering.fit_predict(features_df)
+    plt.figure(figsize=(8,6))
+    plt.scatter(features_df.iloc[:,0], features_df.iloc[:,1], c=labels, cmap="tab10", s=50)
+    plt.xlabel("PCA1")
+    plt.ylabel("PCA2")
+    plt.title("PCA Projection of fMRI Connectivity Features")
     plt.show()
