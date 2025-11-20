@@ -1,7 +1,7 @@
 from my_imports import *
 from data_load import load_fc_matrices, plot_fc_matrix, load_network_table
 
-WFH = False
+WFH = True
 
 
 def get_network_table():

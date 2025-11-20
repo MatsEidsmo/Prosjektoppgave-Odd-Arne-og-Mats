@@ -59,21 +59,116 @@ def find_clusters(features_df: pd.DataFrame, linkage_matrix: np.array = None, gr
     plt.plot(list(scores.keys()), list(scores.values()), marker='o')
     plt.show()
 
+
+
+
+def PCA_subset_scores(pca_df: pd.DataFrame, components: list, method="hierarchical", k_range=(2, 10)):
+    
+    subset = pca_df[components]
+    silhouette_scores = []
+    labels_dict = {}
+    ks = range(k_range[0], k_range[1] + 1)
+
+    for k in ks:
+        if method == "kmeans":
+            model = KMeans(n_clusters=k, random_state=42)
+            labels = model.fit_predict(subset)
+        elif method == "hierarchical":
+            Z = linkage(subset, method="ward")
+            labels = fcluster(Z, k, criterion="maxclust")
+        else:
+            raise ValueError("Unsupported method")
+
+        score = silhouette_score(subset, labels)
+        silhouette_scores.append(score)
+        print(f"k={k}, silhouette_score={score:.4f}")
+        labels_dict[k] = labels
+
+    # Plot silhouette scores
+    plt.figure(figsize=(8, 5))
+    plt.plot(ks, silhouette_scores, marker='o')
+    plt.title(f"Silhouette Scores for {method.capitalize()} Clustering, PCA Components: {', '.join(components)}")
+    plt.xlabel("Number of Clusters (k)")
+    plt.ylabel("Silhouette Score")
+    plt.grid(True)
+    plt.show()
+
+    
+    # Best k
+    best_k = ks[np.argmax(silhouette_scores)]
+    best_labels = labels_dict[best_k]
+    print(f"Best k: {best_k} with silhouette score {max(silhouette_scores):.4f}")
+
+    return best_k, best_labels, silhouette_scores
+
+
+
+
+
+def k_means_clustering(features_df: pd.DataFrame, cluster_range=(2, 10), group: str = "any"):
+    if group != "any":
+        features_df = features_df[features_df['group'] == group]
+
+    # Keep only numeric columns
+    numeric_df = features_df.select_dtypes(include=[np.number])
+
+    silhouette_scores = {}
+    for n_clusters in range(cluster_range[0], cluster_range[1] + 1):
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+        cluster_labels = kmeans.fit_predict(numeric_df)
+        score = silhouette_score(numeric_df, cluster_labels)
+        silhouette_scores[n_clusters] = score
+        print(f"For n_clusters = {n_clusters}, silhouette_score = {score:.4f}")
+
+    # Plot silhouette scores
+    plt.figure(figsize=(8, 5))
+    plt.plot(list(silhouette_scores.keys()), list(silhouette_scores.values()), marker='o')
+    plt.title("Silhouette Score vs Number of Clusters")
+    plt.xlabel("Number of Clusters")
+    plt.ylabel("Silhouette Score")
+    plt.grid(True)
+    plt.show()
+
+    # Best cluster count
+    best_k = max(silhouette_scores, key=silhouette_scores.get)
+    print(f"Best number of clusters: {best_k} with silhouette score {silhouette_scores[best_k]:.4f}")
+
+    return best_k, silhouette_scores
+
+
+
 def plot_clustered_heatmap(features_df: pd.DataFrame, linkage_matrix: np.array):
     sns.clustermap(features_df, row_linkage=linkage_matrix, col_cluster=False, cmap='vlag', standard_scale=1)
     plt.title('Clustered Heatmap')
     plt.show()
 
 
-def plot_PCA(features_df: pd.DataFrame):
-    clustering = AgglomerativeClustering(n_clusters=2, linkage="ward")
-    labels = clustering.fit_predict(features_df)
-    plt.figure(figsize=(8,6))
-    plt.scatter(features_df.iloc[:,0], features_df.iloc[:,1], c=labels, cmap="tab10", s=50)
-    plt.xlabel("PCA1")
-    plt.ylabel("PCA2")
-    plt.title("PCA Projection of fMRI Connectivity Features")
+
+def plot_clusters_scatter_pc2_pc3(pca_df: pd.DataFrame, labels: np.ndarray, title="Clusters in PCA Space (PC2 vs PC3)"):
+    """
+    Plot a scatter plot of PC2 vs PC3 colored by cluster labels.
+
+    Parameters:
+    -----------
+    pca_df : pd.DataFrame
+        PCA-transformed data (must include PC2 and PC3).
+    labels : np.ndarray
+        Cluster labels for each subject.
+    title : str
+        Title for the plot.
+    """
+    if "PC2" not in pca_df.columns or "PC3" not in pca_df.columns:
+        raise ValueError("pca_df must contain PC2 and PC3 columns for plotting.")
+
+    plt.figure(figsize=(8, 6))
+    scatter = plt.scatter(pca_df["PC2"], pca_df["PC3"], c=labels, cmap="viridis", s=50)
+    plt.title(title)
+    plt.xlabel("PC2")
+    plt.ylabel("PC3")
+    plt.colorbar(scatter, label="Cluster")
+    plt.grid(True)
     plt.show()
+
 
 def PCA_loadings(z_scored_features: pd.DataFrame, n_components=10):
     pca = PCA(n_components=n_components)
