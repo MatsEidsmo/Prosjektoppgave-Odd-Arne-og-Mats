@@ -15,7 +15,7 @@ def main():
     columns = npz_data['columns']
     index = npz_data['index']
 
-    subject_features = pd.DataFrame(data=values, columns=columns, index=index)
+    subject_features = dp.remove_duplicate_pairs(pd.DataFrame(values, columns=columns, index=index))
 
 
     #res_scores = rs.extract_res_scores_from_csv(r"C:\Users\matsei\Documents\ISC_data\Beh.csv")
