@@ -35,8 +35,8 @@ def main():
     _, labels, _ = da.PCA_subset_scores(pc_df, ['PC2', 'PC3'], method="hierarchical", k_range=(2, 2))
     da.plot_clusters_scatter_pc2_pc3(pc_df, labels)
 
-    # loadings, _ = da.PCA_loadings(z_scores)
-    # da.plot_loadings(loadings)
+    loadings, _ = da.PCA_loadings(z_scores)
+    #da.plot_loadings(loadings)
     
     
     #linkage_matrix = da.perform_ward_hierarchical_linkage(z_scores)

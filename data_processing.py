@@ -14,27 +14,29 @@ def get_network_table():
     
 
 
+
 def extract_subject_connectivity_features(fc_matrix: np.array, network_table: pd.DataFrame, group: int = "all"):
-    #print(f"Extracting features for group: {group}")
     networks = network_table["Network"].values
     unique_networks = np.unique(networks)
 
     features = {}
-    for net_i in unique_networks:
-        
+    for i, net_i in enumerate(unique_networks):
         idx_i = np.where(networks == net_i)[0]
-        
-        for net_j in unique_networks:
-            
+
+        for j, net_j in enumerate(unique_networks):
+            if j < i:  # Skip lower triangle to avoid duplicates
+                continue
+
             idx_j = np.where(networks == net_j)[0]
             sub_matrix = fc_matrix[np.ix_(idx_i, idx_j)]
-           
+
             mean_conn = np.mean(sub_matrix)
             feature_name = f"{net_i}_{net_j}_mean_conn"
             features[feature_name] = mean_conn
+
     features["group"] = group
-    #print(f"group: {group}")
     return features
+
 
 def create_feature_dataframe():
     fc_matrices = load_fc_matrices()
@@ -109,3 +111,20 @@ def generate_synthetic_feature_dataframe(n_subjects=10, n_rois=200, n_networks=7
 
     print(f"✅ Generated synthetic feature dataframe: {features_df.shape[0]} subjects × {features_df.shape[1]} features")
     return features_df
+
+
+
+
+def remove_duplicate_pairs(df):
+    keep, seen = [], set()
+    for c in df.columns:
+        if "_mean_conn" in c:
+            parts = c.replace("_mean_conn", "").split("_")
+            key = tuple(sorted(parts[:2]))
+            if key not in seen:
+                keep.append(c)
+                seen.add(key)
+        else:
+            keep.append(c)
+    return df[keep]
+
