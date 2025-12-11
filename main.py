@@ -14,7 +14,7 @@ def main():
         columns = npz_data['columns']
         index = npz_data['index']
 
-        subject_features = pd.DataFrame(data=values, columns=columns, index=index)
+        subject_features = dp.remove_duplicate_pairs(pd.DataFrame(data=values, columns=columns, index=index))
 
     else:
         #fc_matrices = dl.load_fc_matrices()
@@ -32,11 +32,11 @@ def main():
     
     #Cluster on PC2 only
     
-    _, labels, _ = da.PCA_subset_scores(pc_df, ['PC2'], method="hierarchical", k_range=(2, 10))
+    _, labels, _ = da.PCA_subset_scores(pc_df, ['PC2', 'PC3'], method="kmeans", k_range=(2, 2))
     da.plot_clusters_scatter_pc2_pc3(pc_df, labels)
 
-    # loadings, _ = da.PCA_loadings(z_scores)
-    # da.plot_loadings(loadings)
+    loadings, _ = da.PCA_loadings(z_scores)
+    #da.plot_loadings(loadings)
     
     
     #linkage_matrix = da.perform_ward_hierarchical_linkage(z_scores)
