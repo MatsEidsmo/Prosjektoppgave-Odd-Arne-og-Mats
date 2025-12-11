@@ -85,13 +85,13 @@ def PCA_subset_scores(pca_df: pd.DataFrame, components: list, method="hierarchic
         labels_dict[k] = labels
 
     # Plot silhouette scores
-    plt.figure(figsize=(8, 5))
-    plt.plot(ks, silhouette_scores, marker='o')
-    plt.title(f"Silhouette Scores for {method.capitalize()} Clustering, PCA Components: {', '.join(components)}")
-    plt.xlabel("Number of Clusters (k)")
-    plt.ylabel("Silhouette Score")
-    plt.grid(True)
-    plt.show()
+    # plt.figure(figsize=(8, 5))
+    # plt.plot(ks, silhouette_scores, marker='o')
+    # plt.title(f"Silhouette Scores for {method.capitalize()} Clustering, PCA Components: {', '.join(components)}")
+    # plt.xlabel("Number of Clusters (k)")
+    # plt.ylabel("Silhouette Score")
+    # plt.grid(True)
+    # plt.show()
 
     
     # Best k

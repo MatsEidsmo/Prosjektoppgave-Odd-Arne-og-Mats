@@ -15,27 +15,40 @@ def main():
     columns = npz_data['columns']
     index = npz_data['index']
 
-    subject_features = pd.DataFrame(data=values, columns=columns, index=index)
+    subject_features1 = dp.remove_duplicate_pairs(pd.DataFrame(data=values, columns=columns, index=index))
 
 
-    #res_scores = rs.extract_res_scores_from_csv(r"C:\Users\matsei\Documents\ISC_data\Beh.csv")
     
+    fc_matrices = dl.load_fc_matrices()
+    merged = rs.merge_res_scores(fc_matrices)
     
+    network_table = dp.get_network_table()
+    
+
+    subject_features = dp.create_feature_dataframe(
+    merged=merged,
+    network_table=network_table,
+    group_from="subject_prefix",   # or "index_threshold" if you prefer
+    group_threshold=72             # only used if group_from="index_threshold"
+)
+    id_cols = ["Subject", "Emo_res", "group"]
+    
+
     #dl.plot_fc_matrix(fc_matrices[0])
     
     
-    z_scores = da.perform_z_normalization(subject_features)
+    z_scores = da.perform_z_normalization(subject_features.drop(columns=id_cols))
     #print(f"Z-scores:\n{z_scores}")
     #da.k_means_clustering(z_scores, (2, 10))
 
-    pc_df = da.perform_PCA(z_scores, n_components=20)
+    pc_df = da.perform_PCA(z_scores, n_components=10)
     
     #Cluster on PC2 only
     
     _, labels, _ = da.PCA_subset_scores(pc_df, ['PC2', 'PC3'], method="hierarchical", k_range=(2, 2))
     da.plot_clusters_scatter_pc2_pc3(pc_df, labels)
 
-    loadings, _ = da.PCA_loadings(z_scores)
+    #loadings, _ = da.PCA_loadings(z_scores)
     #da.plot_loadings(loadings)
     
     

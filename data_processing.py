@@ -34,25 +34,68 @@ def extract_subject_connectivity_features(fc_matrix: np.array, network_table: pd
             feature_name = f"{net_i}_{net_j}_mean_conn"
             features[feature_name] = mean_conn
 
-    features["group"] = group
+    #features["group"] = group
     return features
 
 
-def create_feature_dataframe():
-    fc_matrices = load_fc_matrices()
-    all_features = []
-    group_threshold = 72  # Define threshold for group separation
-    for i, fc_matrix in enumerate(fc_matrices):
-        # Determine the group based on the index
-        if i < group_threshold:
-            group = 0  # e.g., Young Adults
-        else:
-            group = 1  # e.g., Older Adults
-        features = extract_subject_connectivity_features(fc_matrix, get_network_table(), group)
-        all_features.append(features)
 
-    features_df = pd.DataFrame(all_features)
+def create_feature_dataframe(merged: pd.DataFrame,
+                             network_table: pd.DataFrame,
+                             group_from: str = "subject_prefix",
+                             group_threshold: int = 72) -> pd.DataFrame:
+    """
+    Build a per-subject feature DataFrame from a merged DataFrame with columns:
+        ['Subject', 'FC', 'Emo_res'].
+    Adds Subject, Emo_res, and group to each feature row.
+
+    group_from:
+        - "subject_prefix": group=0 for 'sub-11...' (YA), group=1 for 'sub-12...' (OA)
+        - "index_threshold": group=0 for first 'group_threshold' rows, else 1
+        - "none": do not assign a group (set to None)
+    """
+    rows = []
+    for i, row in merged.iterrows():
+        subject = row["Subject"]
+        fc_matrix = row["FC"]
+        emo_res = row["Emo_res"]
+
+        # Decide group
+        if group_from == "subject_prefix":
+            # Example: sub-11xxx -> group 0 (YA), sub-12xxx -> group 1 (OA)
+            if isinstance(subject, str) and subject.startswith("sub-11"):
+                group = 0
+            elif isinstance(subject, str) and subject.startswith("sub-12"):
+                group = 1
+            else:
+                group = None  # fallback if pattern differs
+        elif group_from == "index_threshold":
+            group = 0 if i < group_threshold else 1
+        else:
+            group = None
+
+        # Compute features for this subject
+        feats = extract_subject_connectivity_features(
+            fc_matrix=fc_matrix,
+            network_table=network_table,
+            group=group if group is not None else "all",  # your function expects an int or "all"
+        )
+
+        # Attach identifiers and target
+        feats["Subject"] = subject
+        feats["Emo_res"] = emo_res
+        feats["group"] = group
+
+        rows.append(feats)
+
+    features_df = pd.DataFrame(rows)
+
+    # Reorder columns: Subject | Emo_res | group | features...
+    first_cols = ["Subject", "Emo_res", "group"]
+    other_cols = [c for c in features_df.columns if c not in first_cols]
+    features_df = features_df[first_cols + other_cols]
+
     return features_df
+
 
 
 

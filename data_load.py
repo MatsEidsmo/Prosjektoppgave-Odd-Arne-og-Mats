@@ -1,41 +1,46 @@
 from my_imports import *
 import matplotlib.pyplot as plt
-
+import os
 SubcorticalROI = False
 
 
 
-def load_fc_matrices():
+def load_fc_matrices() -> pd.DataFrame:
     N_FC_Matrices_m2 = 400
-    ## Load data from matlab files
-    subjects = []
+
+    # Base directories (adjust if needed)
+    base_ya = r"C:\Users\matsei\Documents\sch407\YA\zFCmat"
+    base_oa = r"C:\Users\matsei\Documents\sch407\OA\zFCmat"
+
+    rows = []
+    missing = []
+
     for i in range(N_FC_Matrices_m2):
-
-        filepath1 = rf"C:\Users\matsei\Documents\Mats og Odd Arne\Prosjektoppgave\sch407\YA\zFCmat\sub-11{i+1:03d}_task-video_run-2__zFCmat.mat"
-        filepath2 = rf"C:\Users\matsei\Documents\Mats og Odd Arne\Prosjektoppgave\sch407\OA\zFCmat\sub-12{i+1:03d}_task-video_run-2__zFCmat.mat"
-
-        for filepath in [filepath1, filepath2]:
+        # Build two subjects per i: sub-11XXX and sub-12XXX
+        for cohort_code, base_dir in [("11", base_ya), ("12", base_oa)]:
+            Subject = f"sub-{cohort_code}{i+1:03d}"
+            filename = f"{Subject}_task-video_run-2__zFCmat.mat"
+            filepath = os.path.join(base_dir, filename)
 
             try:
                 fc_mat_m2 = loadmat(filepath)
-                fc_array = np.array(fc_mat_m2['zfcmatrix'])
-                np.fill_diagonal(fc_array, 1.0)  # Ensure diagonal is 1
-                
+                fc_array = np.array(fc_mat_m2['zfcmatrix'], dtype=float)
+
+                # Ensure diagonal 1.0 and optionally trim to 400x400
+                np.fill_diagonal(fc_array, 1.0)
                 if not SubcorticalROI:
                     fc_array = fc_array[:400, :400]
-                
-                subjects.append(fc_array)
+
+                rows.append({"Subject": Subject, "FC": fc_array})
 
             except Exception as e:
-                #print(f"Error loading {filepath}: {e}")
+                missing.append((Subject, filepath, str(e)))
                 continue
-        
-        # Process fc_matrix as needed
-    #print(f"Loaded {len(subjects)} FC matrices.")
 
-    #print(f"Matrix shape:\n {subjects[0].shape}")
+    df = pd.DataFrame(rows)
+   
+    return df
 
-    return subjects
 
 def plot_fc_matrix(fc_matrix):
     #fc_matrix = np.nan_to_num(fc_matrix, nan=0.0, posinf=1.0, neginf=0.0)
