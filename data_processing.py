@@ -1,14 +1,14 @@
 from my_imports import *
 from data_load import load_fc_matrices, plot_fc_matrix, load_network_table
 
-WFH = True
+WFH = False
 
 
 def get_network_table():
     if WFH:
         network_table = load_network_table(r"C:\Users\matse\OneDrive - NTNU\Documents\Kyb\2025 Høst\Prosjektoppgave\Schaefer2018_400Parcels_7Networks_order.lut")
     else:
-        network_table = load_network_table(r"C:\Users\matsei\Documents\Mats og Odd Arne\Prosjektoppgave-Odd-Arne-og-Mats\Schaefer2018_400Parcels_7Networks_order.lut")
+        network_table = load_network_table(r"Schaefer2018_400Parcels_7Networks_order.lut")
     
     return network_table
     
