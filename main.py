@@ -2,23 +2,23 @@ from my_imports import *
 import data_load as dl
 import data_processing as dp
 import data_analisys as da
+import res_scores as rs
 
-WFH = True
+WFH = False
 
 def main():
-    if WFH:
-        
-        npz_data = np.load("subject_features.npz", allow_pickle=True)
+    
+    
+    npz_data = np.load("subject_features.npz", allow_pickle=True)
 
-        values = npz_data['data']
-        columns = npz_data['columns']
-        index = npz_data['index']
+    values = npz_data['data']
+    columns = npz_data['columns']
+    index = npz_data['index']
 
-        subject_features = pd.DataFrame(data=values, columns=columns, index=index)
+    subject_features = pd.DataFrame(data=values, columns=columns, index=index)
 
-    else:
-        #fc_matrices = dl.load_fc_matrices()
-        subject_features = dp.create_feature_dataframe()
+
+    #res_scores = rs.extract_res_scores_from_csv(r"C:\Users\matsei\Documents\ISC_data\Beh.csv")
     
     
     #dl.plot_fc_matrix(fc_matrices[0])
@@ -32,7 +32,7 @@ def main():
     
     #Cluster on PC2 only
     
-    _, labels, _ = da.PCA_subset_scores(pc_df, ['PC2'], method="hierarchical", k_range=(2, 10))
+    _, labels, _ = da.PCA_subset_scores(pc_df, ['PC2', 'PC3'], method="hierarchical", k_range=(2, 2))
     da.plot_clusters_scatter_pc2_pc3(pc_df, labels)
 
     # loadings, _ = da.PCA_loadings(z_scores)
