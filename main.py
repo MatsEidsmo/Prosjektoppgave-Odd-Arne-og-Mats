@@ -33,7 +33,8 @@ def main():
 )
     id_cols = ["Subject", "Emo_res", "group"]
     
-
+    print(f"Subject Features DataFrame:\n{subject_features.drop(columns=id_cols)}")
+    print("Subject1 Features DataFrame:\n", subject_features1)
     #dl.plot_fc_matrix(fc_matrices[0])
     
     
@@ -46,7 +47,7 @@ def main():
     #Cluster on PC2 only
     
     _, labels, _ = da.PCA_subset_scores(pc_df, ['PC2', 'PC3'], method="hierarchical", k_range=(2, 2))
-    da.plot_clusters_scatter_pc2_pc3(pc_df, labels)
+    da.plot_clusters_scatter_pc2_pc3(pc_df, labels=None, color_by=subject_features.loc[pc_df.index, "Emo_res"], title="PCA Scatter Plot Colored by emotional recilience")
 
     #loadings, _ = da.PCA_loadings(z_scores)
     #da.plot_loadings(loadings)

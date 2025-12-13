@@ -9,8 +9,8 @@ def load_fc_matrices() -> pd.DataFrame:
     N_FC_Matrices_m2 = 400
 
     # Base directories (adjust if needed)
-    base_ya = r"C:\Users\matsei\Documents\sch407\YA\zFCmat"
-    base_oa = r"C:\Users\matsei\Documents\sch407\OA\zFCmat"
+    base_ya = r"C:\Users\matsei\Documents\Mats og Odd Arne\Prosjektoppgave\sch407\YA\zFCmat"
+    base_oa = r"C:\Users\matsei\Documents\Mats og Odd Arne\Prosjektoppgave\sch407\OA\zFCmat"
 
     rows = []
     missing = []

@@ -21,8 +21,8 @@ def perform_PCA(features_df: pd.DataFrame, n_components=10, group: int = "all"):
                          columns=[f'PC{i+1}' for i in range(n_components)])
     
     explained = pca.explained_variance_ratio_
-    print("Explained variance per PC:", explained)
-    print("Cumulative explained variance:", explained.cumsum())
+    # print("Explained variance per PC:", explained)
+    # print("Cumulative explained variance:", explained.cumsum())
     return features_df
 
 def perform_ward_hierarchical_linkage(features_df: pd.DataFrame):
@@ -144,30 +144,96 @@ def plot_clustered_heatmap(features_df: pd.DataFrame, linkage_matrix: np.array):
 
 
 
-def plot_clusters_scatter_pc2_pc3(pca_df: pd.DataFrame, labels: np.ndarray, title="Clusters in PCA Space (PC2 vs PC3)"):
-    """
-    Plot a scatter plot of PC2 vs PC3 colored by cluster labels.
 
-    Parameters:
-    -----------
+
+def plot_clusters_scatter_pc2_pc3(
+    pca_df: pd.DataFrame,
+    labels: np.ndarray = None,
+    color_by: pd.Series | np.ndarray | None = None,
+    title: str = "PC2 vs PC3",
+    cmap_continuous: str = "viridis",
+    cmap_discrete: str = "tab10",
+    marker: str = "o",
+    s: int = 50,
+):
+    """
+    Scatter PC2 vs PC3. Color by:
+      - cluster labels (if provided and color_by is None),
+      - or by 'color_by' (group or Emo_res).
+    
+    Parameters
+    ----------
     pca_df : pd.DataFrame
-        PCA-transformed data (must include PC2 and PC3).
-    labels : np.ndarray
-        Cluster labels for each subject.
+        Must include 'PC2' and 'PC3'. (Other columns ignored.)
+    labels : np.ndarray | None
+        Optional cluster labels (integers). Used only if color_by is None.
+    color_by : pd.Series | np.ndarray | None
+        Optional vector to color points by.
+        - If dtype is numeric and has many unique values → treated as continuous (e.g., Emo_res).
+        - If small number of uniques → treated as categorical (e.g., group).
     title : str
-        Title for the plot.
+        Plot title.
+    cmap_continuous : str
+        Colormap for continuous values.
+    cmap_discrete : str
+        Colormap for categorical values.
+    marker : str
+        Matplotlib marker style.
+    s : int
+        Marker size.
     """
-    if "PC2" not in pca_df.columns or "PC3" not in pca_df.columns:
-        raise ValueError("pca_df must contain PC2 and PC3 columns for plotting.")
+    if "PC1" not in pca_df.columns or "PC2" not in pca_df.columns:
+        raise ValueError("pca_df must contain PC2 and PC3 columns.")
 
-    plt.figure(figsize=(8, 6))
-    scatter = plt.scatter(pca_df["PC2"], pca_df["PC3"], c=labels, cmap="viridis", s=50)
-    plt.title(title)
-    plt.xlabel("PC2")
-    plt.ylabel("PC3")
-    plt.colorbar(scatter, label="Cluster")
-    plt.grid(True)
+    x = pca_df["PC1"].to_numpy()
+    y = pca_df["PC2"].to_numpy()
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    # Decide what to color by
+    if color_by is None and labels is not None:
+        # Color by cluster labels
+        scatter = ax.scatter(x, y, c=labels, cmap=cmap_discrete, marker=marker, s=s)
+        cbar = plt.colorbar(scatter, ax=ax, label="Cluster")
+    else:
+        # Color by provided series/array
+        arr = np.asarray(color_by)
+        # Try to infer categorical vs continuous
+        is_numeric = np.issubdtype(arr.dtype, np.number)
+        n_unique = len(np.unique(arr))
+        categorical = (not is_numeric) or (n_unique <= 10)
+
+        if categorical:
+            # Map categories to integers and legend
+            cats = pd.Categorical(arr)
+            cat_codes = cats.codes  # -1 for NaN; handle NaNs by masking
+            mask = cat_codes >= 0
+            # Use a discrete colormap
+            scatter = ax.scatter(x[mask], y[mask], c=cat_codes[mask],
+                                 cmap=cmap_discrete, marker=marker, s=s)
+            # Build a legend with category labels
+            handles = []
+            for code, cat_name in enumerate(cats.categories):
+                # plot an invisible point to create legend handles
+                handles.append(plt.Line2D([], [], marker=marker, linestyle="",
+                                          color=scatter.cmap(code / max(1, n_unique-1)),
+                                          label=str(cat_name)))
+            ax.legend(handles=handles, title="Group" if is_numeric else "Category",
+                      loc="best", frameon=True)
+
+        else:
+            # Continuous coloring (e.g., Emo_res)
+            scatter = ax.scatter(x, y, c=arr, cmap=cmap_continuous,
+                                 marker=marker, s=s)
+            cbar = plt.colorbar(scatter, ax=ax, label="Value")
+
+    ax.set_title(title)
+    ax.set_xlabel("PC1")
+    ax.set_ylabel("PC2")
+    ax.grid(True)
+    plt.tight_layout()
     plt.show()
+
 
 
 def PCA_loadings(z_scored_features: pd.DataFrame, n_components=10):

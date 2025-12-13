@@ -14,7 +14,7 @@ def merge_res_scores(fc_matrices: pd.DataFrame) -> pd.DataFrame:
     
 
     # Load CSV scores
-    res_df = extract_res_scores_from_csv(r"C:\Users\matsei\Documents\ISC_data\Beh.csv")
+    res_df = extract_res_scores_from_csv(r"C:\Users\matsei\Documents\Mats og Odd Arne\Prosjektoppgave\ISC_data\Beh.csv")
     res_df = res_df.drop_duplicates(subset=["Subject"], keep="last")
 
     # Normalize Subject keys for merging
